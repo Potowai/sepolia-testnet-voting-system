@@ -45,22 +45,22 @@ contract SimpleVotingSystem is AccessControl {
         workflowStatus = _newStatus;
     }
 
-    function registerCandidate(string memory _name, address _candidateAddress) external onlyRole(DEFAULT_ADMIN_ROLE) atStatus(WorkflowStatus.REGISTER_CANDIDATES) {
-        candidates.push(Candidate({
-            name: _name,
-            candidateAddress: _candidateAddress,
-            voteCount: 0
-        }));
+    function registerCandidate(string memory _name, address _candidateAddress)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        atStatus(WorkflowStatus.REGISTER_CANDIDATES)
+    {
+        candidates.push(Candidate({name: _name, candidateAddress: _candidateAddress, voteCount: 0}));
     }
 
     // Role FOUNDER : Envoyer des fonds aux candidats
     function fundCandidates() external payable onlyRole(FOUNDER_ROLE) atStatus(WorkflowStatus.FOUND_CANDIDATES) {
         require(candidates.length > 0, "Aucun candidat a financer");
         require(msg.value > 0, "Aucun fonds envoye");
-        
+
         uint256 share = msg.value / candidates.length;
         for (uint256 i = 0; i < candidates.length; i++) {
-            (bool success, ) = candidates[i].candidateAddress.call{value: share}("");
+            (bool success,) = candidates[i].candidateAddress.call{value: share}("");
             require(success, "Echec du transfert");
         }
     }
@@ -76,17 +76,17 @@ contract SimpleVotingSystem is AccessControl {
 
     function getWinner() external view returns (string memory winnerName, uint256 winnerVoteCount) {
         require(workflowStatus == WorkflowStatus.COMPLETED, "Vote non termine");
-        
+
         uint256 winningVoteCount = 0;
         uint256 winningIndex = 0;
-        
+
         for (uint256 i = 0; i < candidates.length; i++) {
             if (candidates[i].voteCount > winningVoteCount) {
                 winningVoteCount = candidates[i].voteCount;
                 winningIndex = i;
             }
         }
-        
+
         if (candidates.length > 0) {
             return (candidates[winningIndex].name, candidates[winningIndex].voteCount);
         } else {
@@ -98,8 +98,8 @@ contract SimpleVotingSystem is AccessControl {
     function withdraw() external onlyRole(WITHDRAWER_ROLE) atStatus(WorkflowStatus.COMPLETED) {
         uint256 balance = address(this).balance;
         require(balance > 0, "Aucun fonds a retirer");
-        
-        (bool success, ) = msg.sender.call{value: balance}("");
+
+        (bool success,) = msg.sender.call{value: balance}("");
         require(success, "Echec du retrait");
     }
 

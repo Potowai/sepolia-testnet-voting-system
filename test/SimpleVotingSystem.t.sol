@@ -22,7 +22,7 @@ contract SimpleVotingSystemTest is Test {
         // 1. Deploiement des contrats
         votingNft = new VotingNFT();
         votingSystem = new SimpleVotingSystem(address(votingNft));
-        
+
         // 2. Transfert de l'ownership du NFT vers le systeme de vote
         votingNft.transferOwnership(address(votingSystem));
 
@@ -47,7 +47,7 @@ contract SimpleVotingSystemTest is Test {
     function testRevertRegisterCandidateNonAdmin() public {
         // Verifie que seul l'admin peut ajouter
         vm.prank(voter1);
-        vm.expectRevert(); 
+        vm.expectRevert();
         votingSystem.registerCandidate("Bob", candidate2);
     }
 
@@ -59,7 +59,7 @@ contract SimpleVotingSystemTest is Test {
     function testFundCandidates() public {
         votingSystem.registerCandidate("Alice", candidate1);
         votingSystem.registerCandidate("Bob", candidate2);
-        
+
         votingSystem.setWorkflowStatus(SimpleVotingSystem.WorkflowStatus.FOUND_CANDIDATES);
 
         vm.deal(founder, 10 ether);
@@ -73,7 +73,7 @@ contract SimpleVotingSystemTest is Test {
 
     function testRevertVoteTooEarly() public {
         votingSystem.registerCandidate("Alice", candidate1);
-        votingSystem.setWorkflowStatus(SimpleVotingSystem.WorkflowStatus.VOTE); 
+        votingSystem.setWorkflowStatus(SimpleVotingSystem.WorkflowStatus.VOTE);
 
         vm.prank(voter1);
         vm.expectRevert("Le vote n'a pas encore commence (delai 1h)");
@@ -82,7 +82,7 @@ contract SimpleVotingSystemTest is Test {
 
     function testVoteAfterDelay() public {
         votingSystem.registerCandidate("Alice", candidate1);
-        votingSystem.setWorkflowStatus(SimpleVotingSystem.WorkflowStatus.VOTE); 
+        votingSystem.setWorkflowStatus(SimpleVotingSystem.WorkflowStatus.VOTE);
 
         // On avance le temps d'une heure
         vm.warp(block.timestamp + 3601);
@@ -93,7 +93,7 @@ contract SimpleVotingSystemTest is Test {
 
         (, uint256 count,) = votingSystem.getCandidate(0);
         assertEq(count, 1);
-        
+
         // Verifie que le votant a recu son NFT
         assertEq(votingNft.balanceOf(voter1), 1);
     }
@@ -105,7 +105,7 @@ contract SimpleVotingSystemTest is Test {
 
         vm.startPrank(voter1);
         votingSystem.vote(0);
-        
+
         // Tentative de second vote
         vm.expectRevert("Vous avez deja vote");
         votingSystem.vote(0);
@@ -127,8 +127,8 @@ contract SimpleVotingSystemTest is Test {
         assertEq(winnerCount, 1);
 
         // Test du retrait par le Withdrawer
-        vm.deal(address(votingSystem), 1 ether); 
-        
+        vm.deal(address(votingSystem), 1 ether);
+
         vm.prank(withdrawer);
         uint256 preBalance = withdrawer.balance;
         votingSystem.withdraw();
